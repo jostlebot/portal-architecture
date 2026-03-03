@@ -142,9 +142,14 @@ body {
   transition: background .15s, transform .1s;
   flex-shrink: 0;
 }
-.flag-btn:hover { background: #a84e30; }
+.flag-btn:hover { background: #b38559 !important; }
 .flag-btn:active { transform: scale(.97); }
-.flag-btn.flagged { background: #2a4a35; }
+.bridge-count-mini {
+  background: rgba(255,255,255,.25);
+  font-size: 10px; font-weight: 600;
+  padding: 1px 6px; border-radius: 8px;
+  min-width: 18px; text-align: center;
+}
 
 /* ── ROOM GRID ── */
 .rooms-grid {
@@ -391,6 +396,170 @@ body {
 .flag-toast.show { transform: translateY(0); opacity: 1; }
 .toast-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--flag-red); }
 
+/* ── BRIDGE DRAWER ── */
+.bridge-drawer {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--white);
+  border-top: 2px solid var(--warm);
+  box-shadow: 0 -4px 30px rgba(30,42,48,.12);
+  z-index: 200;
+  transform: translateY(calc(100% - 52px));
+  transition: transform .35s cubic-bezier(.4,0,.2,1);
+}
+.bridge-drawer.open { transform: translateY(0); }
+
+.bridge-tab {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 14px 22px;
+  cursor: pointer;
+  background: var(--warm-pale);
+  border-bottom: 1px solid var(--warm-light);
+}
+.bridge-tab-icon { font-size: 16px; }
+.bridge-tab-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--warm);
+}
+.bridge-count {
+  background: var(--warm); color: #fff;
+  font-size: 11px; font-weight: 600;
+  padding: 2px 8px; border-radius: 10px;
+  min-width: 22px; text-align: center;
+}
+.bridge-count.empty { background: var(--muted); }
+.bridge-chevron {
+  margin-left: auto;
+  color: var(--warm);
+  transition: transform .25s;
+}
+.bridge-drawer.open .bridge-chevron { transform: rotate(180deg); }
+
+.bridge-content {
+  padding: 20px 22px 24px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+.bridge-empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+  padding: 20px;
+}
+.bridge-items { display: flex; flex-direction: column; gap: 10px; }
+.bridge-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 14px;
+  background: var(--cream);
+  border-radius: 8px;
+  border: 1px solid #e8edf0;
+}
+.bridge-item-icon { font-size: 14px; flex-shrink: 0; margin-top: 2px; }
+.bridge-item-content { flex: 1; min-width: 0; }
+.bridge-item-room {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 3px;
+}
+.bridge-item-label { font-size: 13px; color: var(--slate); font-weight: 500; }
+.bridge-item-note {
+  font-size: 12px; color: var(--slate-mid);
+  margin-top: 4px; line-height: 1.4;
+  font-style: italic;
+}
+.bridge-item-remove {
+  background: none; border: none;
+  color: var(--muted); font-size: 16px;
+  cursor: pointer; padding: 4px;
+  transition: color .15s;
+  flex-shrink: 0;
+}
+.bridge-item-remove:hover { color: var(--flag-red); }
+
+.bridge-add-note {
+  display: flex; gap: 10px;
+  margin-top: 16px; padding-top: 16px;
+  border-top: 1px solid #e8edf0;
+}
+.bridge-note-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--sage-light);
+  border-radius: 8px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 13px;
+  resize: none;
+}
+.bridge-note-input:focus { outline: none; border-color: var(--sage); }
+.bridge-note-input::placeholder { color: var(--muted); }
+.bridge-add-btn {
+  padding: 10px 16px;
+  background: var(--sage);
+  color: #fff; border: none;
+  border-radius: 8px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 12px; font-weight: 500;
+  cursor: pointer;
+  transition: background .15s;
+  white-space: nowrap;
+}
+.bridge-add-btn:hover { background: #6a8e77; }
+
+.bridge-actions {
+  display: flex; gap: 10px;
+  margin-top: 16px; padding-top: 16px;
+  border-top: 1px solid #e8edf0;
+}
+.bridge-share-btn {
+  flex: 1;
+  padding: 12px 18px;
+  background: var(--warm);
+  color: #fff; border: none;
+  border-radius: 8px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background .15s;
+}
+.bridge-share-btn:hover { background: #b38559; }
+.bridge-clear-btn {
+  padding: 12px 18px;
+  background: transparent;
+  color: var(--muted); border: 1px solid #dde5e9;
+  border-radius: 8px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.bridge-clear-btn:hover { border-color: var(--flag-red); color: var(--flag-red); }
+
+/* Room item flag button */
+.room-item-wrap {
+  display: flex; align-items: center; gap: 6px;
+}
+.room-item-text { flex: 1; }
+.room-item-flag {
+  opacity: 0;
+  background: none; border: none;
+  color: var(--warm);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.room-item:hover .room-item-flag { opacity: 1; }
+.room-item-flag:hover { background: var(--warm-pale); }
+.room-item-flag.flagged { opacity: 1; color: var(--sage); }
+
+/* Adjust body padding for drawer */
+body { padding-bottom: 80px; }
+
 /* ── MOBILE ── */
 @media (max-width: 700px) {
   body { padding: 24px 14px 48px; }
@@ -434,9 +603,10 @@ body {
       <div class="session-dot"></div>
       <span class="session-text">Next session with <span class="session-name">Jamie</span> &nbsp;·&nbsp; Thu 3:00 pm</span>
     </div>
-    <button class="flag-btn" id="flagBtn" onclick="toggleFlag()">
-      <span id="flagIcon">⚑</span>
-      <span id="flagLabel">Flag for Session</span>
+    <button class="flag-btn" id="flagBtn" onclick="toggleBridge()" style="background: var(--warm);">
+      <span>🌉</span>
+      <span>Bridge</span>
+      <span class="bridge-count-mini" id="bridgeCountMini">0</span>
     </button>
   </div>
 
@@ -450,8 +620,12 @@ body {
         <span class="room-name">Explore</span>
       </div>
       <ul class="room-items">
-        <li class="room-item" onclick="selectItem(event,'Diagnosis Explorer','explore')">Diagnosis Explorer</li>
-        <li class="room-item" onclick="selectItem(event,'Questions Only','explore')">Questions Only</li>
+        <li class="room-item" onclick="selectItem(event,'Diagnosis Explorer','explore')">
+          <div class="room-item-wrap"><span class="room-item-text">Diagnosis Explorer</span><button class="room-item-flag" onclick="flagItem(event,'Diagnosis Explorer','explore','🔍')">+</button></div>
+        </li>
+        <li class="room-item" onclick="selectItem(event,'Questions Only','explore')">
+          <div class="room-item-wrap"><span class="room-item-text">Questions Only</span><button class="room-item-flag" onclick="flagItem(event,'Questions Only','explore','🔍')">+</button></div>
+        </li>
       </ul>
     </div>
 
@@ -462,10 +636,18 @@ body {
         <span class="room-name">Practice</span>
       </div>
       <ul class="room-items">
-        <li class="room-item" onclick="selectItem(event,'Distress Tolerance','practice')">Distress Tolerance</li>
-        <li class="room-item" onclick="selectItem(event,'Hard Conversations','practice')">Hard Conversations</li>
-        <li class="room-item" onclick="selectItem(event,'ShadowBox','practice')">ShadowBox</li>
-        <li class="room-item" onclick="selectItem(event,'Risk Disclosure','practice')">Risk Disclosure</li>
+        <li class="room-item" onclick="selectItem(event,'Distress Tolerance','practice')">
+          <div class="room-item-wrap"><span class="room-item-text">Distress Tolerance</span><button class="room-item-flag" onclick="flagItem(event,'Distress Tolerance','practice','🎯')">+</button></div>
+        </li>
+        <li class="room-item" onclick="selectItem(event,'Hard Conversations','practice')">
+          <div class="room-item-wrap"><span class="room-item-text">Hard Conversations</span><button class="room-item-flag" onclick="flagItem(event,'Hard Conversations','practice','🎯')">+</button></div>
+        </li>
+        <li class="room-item" onclick="selectItem(event,'ShadowBox','practice')">
+          <div class="room-item-wrap"><span class="room-item-text">ShadowBox</span><button class="room-item-flag" onclick="flagItem(event,'ShadowBox','practice','🎯')">+</button></div>
+        </li>
+        <li class="room-item" onclick="selectItem(event,'Risk Disclosure','practice')">
+          <div class="room-item-wrap"><span class="room-item-text">Risk Disclosure</span><button class="room-item-flag" onclick="flagItem(event,'Risk Disclosure','practice','🎯')">+</button></div>
+        </li>
         <li class="room-item gated">Modality Rooms<br><span class="gated-tag">therapist-enabled</span></li>
       </ul>
     </div>
@@ -477,7 +659,9 @@ body {
         <span class="room-name">Hold</span>
       </div>
       <ul class="room-items">
-        <li class="room-item" onclick="selectItem(event,'Spacious Conversation','hold')">Spacious Conversation</li>
+        <li class="room-item" onclick="selectItem(event,'Spacious Conversation','hold')">
+          <div class="room-item-wrap"><span class="room-item-text">Spacious Conversation</span><button class="room-item-flag" onclick="flagItem(event,'Spacious Conversation','hold','🌿')">+</button></div>
+        </li>
       </ul>
     </div>
 
@@ -488,10 +672,15 @@ body {
         <span class="room-name">Journal</span>
       </div>
       <ul class="room-items">
-        <li class="room-item" onclick="selectItem(event,'Free Write','journal')">Free Write</li>
-        <li class="room-item" onclick="selectItem(event,'Mood Tracker','journal')">Mood Tracker</li>
-        <li class="room-item" onclick="selectItem(event,'Med Management','journal')">Med Management</li>
-        <li class="room-item" onclick="selectItem(event,'Flag &amp; Bridge','journal')">Flag &amp; Bridge</li>
+        <li class="room-item" onclick="selectItem(event,'Free Write','journal')">
+          <div class="room-item-wrap"><span class="room-item-text">Free Write</span><button class="room-item-flag" onclick="flagItem(event,'Free Write','journal','📓')">+</button></div>
+        </li>
+        <li class="room-item" onclick="selectItem(event,'Mood Tracker','journal')">
+          <div class="room-item-wrap"><span class="room-item-text">Mood Tracker</span><button class="room-item-flag" onclick="flagItem(event,'Mood Tracker','journal','📓')">+</button></div>
+        </li>
+        <li class="room-item" onclick="selectItem(event,'Med Management','journal')">
+          <div class="room-item-wrap"><span class="room-item-text">Med Management</span><button class="room-item-flag" onclick="flagItem(event,'Med Management','journal','📓')">+</button></div>
+        </li>
       </ul>
     </div>
 
@@ -518,92 +707,41 @@ body {
 
 </div>
 
-<!-- ═══ DIVIDER ═══ -->
-<div class="view-divider">
-  <div class="div-line"></div>
-  <span class="div-label">Therapist View</span>
-  <div class="div-line"></div>
-</div>
-
-<!-- ═══ THERAPIST VIEW ═══ -->
-<div class="view-label">Clinician Dashboard</div>
-<div class="therapist-shell">
-  <div class="therapist-header">
-    <span class="t-header-title">Clinical Controls</span>
-    <span class="hil-badge">Human in Loop</span>
-  </div>
-  <div class="therapist-grid">
-
-    <!-- Room Access -->
-    <div class="t-panel">
-      <div class="t-panel-title">Room Access</div>
-      <div class="access-row" onclick="toggleAccess(this)">
-        <div class="chk on">✓</div>
-        <span class="access-label">Explore</span>
-      </div>
-      <div class="access-row" onclick="toggleAccess(this)">
-        <div class="chk on">✓</div>
-        <span class="access-label">Hold / Journal</span>
-      </div>
-      <div class="access-row" onclick="toggleAccess(this)">
-        <div class="chk on">✓</div>
-        <span class="access-label">ShadowBox</span>
-      </div>
-      <div class="access-row" onclick="toggleAccess(this)">
-        <div class="chk off">✓</div>
-        <span class="access-label dim">CBT Room</span>
-      </div>
-    </div>
-
-    <!-- Clinical Trust -->
-    <div class="t-panel">
-      <div class="t-panel-title">Clinical Trust Level</div>
-      <div class="trust-group" id="trustGroup">
-        <div class="trust-row" onclick="setTrust(this)">
-          <div class="radio-ring off"></div>
-          <span class="trust-label">Standard</span>
-        </div>
-        <div class="trust-row" onclick="setTrust(this)">
-          <div class="radio-ring on"><div class="radio-fill"></div></div>
-          <span class="trust-label bold">Established</span>
-        </div>
-        <div class="trust-row" onclick="setTrust(this)">
-          <div class="radio-ring off"></div>
-          <span class="trust-label">Specialized</span>
-        </div>
-      </div>
-      <div class="safety-pill">
-        <div class="safety-dot"></div>
-        Safety Plan Active
-      </div>
-    </div>
-
-    <!-- Flags & Summaries -->
-    <div class="t-panel">
-      <div class="t-panel-title">Flags &amp; Summaries</div>
-      <div class="flag-row">
-        <div class="fdot crisis"></div>
-        <span class="flag-text">Crisis flags &nbsp;<span class="flag-val">Real-time</span></span>
-      </div>
-      <div class="flag-row">
-        <div class="fdot weekly"></div>
-        <span class="flag-text">Summaries &nbsp;<span class="flag-val">Weekly</span></span>
-      </div>
-      <div class="flag-row">
-        <div class="fdot attach"></div>
-        <span class="flag-text">Attachment signals &nbsp;<span class="flag-val">On</span></span>
-      </div>
-      <button class="history-btn" id="histBtn" onclick="viewHistory()">View Session History →</button>
-    </div>
-
-  </div>
-</div>
-
 <!-- Toast -->
 <div class="flag-toast" id="toast">
   <div class="toast-dot"></div>
   <span id="toastMsg"></span>
 </div>
+
+<!-- Bridge Drawer -->
+<div class="bridge-drawer" id="bridgeDrawer">
+  <div class="bridge-tab" onclick="toggleBridge()">
+    <span class="bridge-tab-icon">🌉</span>
+    <span class="bridge-tab-label">Bridge to Session</span>
+    <span class="bridge-count empty" id="bridgeCount">0</span>
+    <span class="bridge-chevron">▲</span>
+  </div>
+  <div class="bridge-content">
+    <div class="bridge-empty" id="bridgeEmpty">
+      Click + on any item to flag it for your next session.<br>
+      <em style="color: var(--warm);">You control what crosses the bridge.</em>
+    </div>
+    <div class="bridge-items" id="bridgeItems"></div>
+
+    <div class="bridge-add-note" id="bridgeAddNote" style="display:none;">
+      <textarea class="bridge-note-input" id="bridgeNoteInput" placeholder="Add a personal note for Jamie..." rows="2"></textarea>
+      <button class="bridge-add-btn" onclick="addBridgeNote()">Add Note</button>
+    </div>
+
+    <div class="bridge-actions" id="bridgeActions" style="display:none;">
+      <button class="bridge-share-btn" onclick="shareBridge()">
+        <span>✉</span> Share with Jamie
+      </button>
+      <button class="bridge-clear-btn" onclick="clearBridge()">Clear All</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- end main-content -->
 
 <script>
@@ -713,19 +851,8 @@ function setAI(state, el) {
   }
 }
 
-// ─── Flag button ───
-let flagged = false;
+// ─── Toast ───
 let toastTimer;
-function toggleFlag() {
-  flagged = !flagged;
-  const btn = document.getElementById('flagBtn');
-  document.getElementById('flagIcon').textContent = flagged ? '✓' : '⚑';
-  document.getElementById('flagLabel').textContent = flagged ? 'Flagged' : 'Flag for Session';
-  btn.classList.toggle('flagged', flagged);
-  showToast(flagged
-    ? 'Flagged for Jamie — will appear in your next session.'
-    : 'Flag removed.');
-}
 
 function showToast(msg) {
   clearTimeout(toastTimer);
@@ -735,43 +862,140 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
 }
 
-// ─── Therapist: access checkboxes ───
-function toggleAccess(row) {
-  const chk = row.querySelector('.chk');
-  const label = row.querySelector('.access-label');
-  const isOn = chk.classList.contains('on');
-  chk.classList.toggle('on', !isOn);
-  chk.classList.toggle('off', isOn);
-  label.classList.toggle('dim', isOn);
-  showToast(isOn
-    ? label.textContent.trim() + ' access removed.'
-    : label.textContent.trim() + ' access granted.');
+
+// ─── Bridge functionality ───
+let bridgeItems = [];
+let bridgeOpen = false;
+
+function toggleBridge() {
+  bridgeOpen = !bridgeOpen;
+  document.getElementById('bridgeDrawer').classList.toggle('open', bridgeOpen);
 }
 
-// ─── Therapist: trust radios ───
-function setTrust(row) {
-  document.querySelectorAll('#trustGroup .trust-row').forEach(r => {
-    const ring = r.querySelector('.radio-ring');
-    const lbl = r.querySelector('.trust-label');
-    ring.classList.remove('on','off');
-    ring.classList.add('off');
-    ring.innerHTML = '';
-    lbl.classList.remove('bold');
-    lbl.style.color = '';
+function flagItem(e, label, room, icon) {
+  e.stopPropagation();
+  const btn = e.target;
+
+  // Check if already flagged
+  const existingIndex = bridgeItems.findIndex(item => item.label === label && item.room === room);
+  if (existingIndex > -1) {
+    // Remove from bridge
+    bridgeItems.splice(existingIndex, 1);
+    btn.classList.remove('flagged');
+    btn.textContent = '+';
+    showToast('Removed from bridge.');
+  } else {
+    // Add to bridge
+    bridgeItems.push({ label, room, icon, note: '' });
+    btn.classList.add('flagged');
+    btn.textContent = '✓';
+    showToast('Added to bridge for Jamie.');
+  }
+  renderBridge();
+}
+
+function renderBridge() {
+  const container = document.getElementById('bridgeItems');
+  const empty = document.getElementById('bridgeEmpty');
+  const count = document.getElementById('bridgeCount');
+  const countMini = document.getElementById('bridgeCountMini');
+  const addNote = document.getElementById('bridgeAddNote');
+  const actions = document.getElementById('bridgeActions');
+
+  count.textContent = bridgeItems.length;
+  countMini.textContent = bridgeItems.length;
+  count.classList.toggle('empty', bridgeItems.length === 0);
+
+  if (bridgeItems.length === 0) {
+    empty.style.display = 'block';
+    container.innerHTML = '';
+    addNote.style.display = 'none';
+    actions.style.display = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  addNote.style.display = 'flex';
+  actions.style.display = 'flex';
+
+  container.innerHTML = bridgeItems.map((item, i) => `
+    <div class="bridge-item">
+      <span class="bridge-item-icon">${item.icon}</span>
+      <div class="bridge-item-content">
+        <div class="bridge-item-room">${item.room}</div>
+        <div class="bridge-item-label">${item.label}</div>
+        ${item.note ? `<div class="bridge-item-note">"${item.note}"</div>` : ''}
+      </div>
+      <button class="bridge-item-remove" onclick="removeBridgeItem(${i})">×</button>
+    </div>
+  `).join('');
+}
+
+function removeBridgeItem(index) {
+  const item = bridgeItems[index];
+  bridgeItems.splice(index, 1);
+
+  // Update flag button state
+  document.querySelectorAll('.room-item-flag').forEach(btn => {
+    if (btn.onclick.toString().includes(`'${item.label}'`)) {
+      btn.classList.remove('flagged');
+      btn.textContent = '+';
+    }
   });
-  const ring = row.querySelector('.radio-ring');
-  ring.classList.remove('off');
-  ring.classList.add('on');
-  ring.innerHTML = '<div class="radio-fill"></div>';
-  const lbl = row.querySelector('.trust-label');
-  lbl.classList.add('bold');
-  lbl.style.color = '#fff';
-  showToast('Trust level set to: ' + lbl.textContent.trim());
+
+  renderBridge();
+  showToast('Removed from bridge.');
 }
 
-// ─── History button ───
-function viewHistory() {
-  showToast('Session history panel would open here.');
+function addBridgeNote() {
+  const input = document.getElementById('bridgeNoteInput');
+  const note = input.value.trim();
+  if (!note) return;
+
+  // Add as a personal note item
+  bridgeItems.push({ label: 'Personal Note', room: 'note', icon: '✎', note });
+  input.value = '';
+  renderBridge();
+  showToast('Note added to bridge.');
+}
+
+function clearBridge() {
+  bridgeItems = [];
+  document.querySelectorAll('.room-item-flag').forEach(btn => {
+    btn.classList.remove('flagged');
+    btn.textContent = '+';
+  });
+  renderBridge();
+  showToast('Bridge cleared.');
+}
+
+function shareBridge() {
+  if (bridgeItems.length === 0) {
+    showToast('Nothing to share yet.');
+    return;
+  }
+
+  const therapistName = 'Jamie';
+  const subject = encodeURIComponent(`Bridge items for our next session`);
+
+  let body = `Hi ${therapistName},\n\nHere's what I'd like to bring to our next session:\n\n`;
+
+  bridgeItems.forEach((item, i) => {
+    if (item.room === 'note') {
+      body += `• Personal note: "${item.note}"\n`;
+    } else {
+      body += `• ${item.label} (${item.room})`;
+      if (item.note) body += `\n  Note: "${item.note}"`;
+      body += '\n';
+    }
+  });
+
+  body += `\n---\nSent from Between-Session Portal`;
+
+  const mailtoLink = `mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailtoLink;
+
+  showToast('Opening email to share with ' + therapistName + '...');
 }
 </script>
 </body>
