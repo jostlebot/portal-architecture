@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Between-Session Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sage: #7a9e87;
+  --sage-light: #c4d9cb;
+  --sage-pale: #eef4f0;
+  --slate: #3d4f5c;
+  --slate-mid: #5c7080;
+  --slate-light: #a8bcc8;
+  --warm: #c4956a;
+  --warm-light: #e8d4be;
+  --warm-pale: #faf5ef;
+  --cream: #f7f3ee;
+  --ink: #1e2a30;
+  --muted: #8a9ba5;
+  --flag-red: #c05f3c;
+  --white: #ffffff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--cream);
+  font-family: 'Instrument Sans', sans-serif;
+  color: var(--ink);
+  min-height: 100vh;
+  padding: 40px 24px 60px;
+}
+
+/* ── PAGE HEADER ── */
+.page-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.page-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 30px;
+  color: var(--slate);
+  font-style: italic;
+  margin-bottom: 40px;
+  line-height: 1.1;
+}
+
+/* ── VIEW LABELS ── */
+.view-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.view-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #dde5e9;
+}
+
+/* ── PATIENT SHELL ── */
+.portal-shell {
+  background: var(--white);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(30,42,48,.05), 0 8px 40px rgba(30,42,48,.09);
+  margin-bottom: 28px;
+}
+
+/* Session bar */
+.session-bar {
+  background: var(--slate);
+  padding: 14px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.session-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.session-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--sage-light); flex-shrink: 0;
+  animation: breathe 2.8s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.45;transform:scale(.8)}
+}
+.session-text { font-size: 13px; color: var(--sage-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.session-name { color: #fff; font-weight: 600; }
+.flag-btn {
+  background: var(--flag-red); color: #fff; border: none;
+  border-radius: 7px; padding: 8px 15px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: background .15s, transform .1s;
+  flex-shrink: 0;
+}
+.flag-btn:hover { background: #a84e30; }
+.flag-btn:active { transform: scale(.97); }
+.flag-btn.flagged { background: #2a4a35; }
+
+/* ── ROOM GRID ── */
+.rooms-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid #e8edf0;
+}
+.room {
+  padding: 22px 18px;
+  border-right: 1px solid #e8edf0;
+  cursor: pointer;
+  transition: background .18s;
+  position: relative;
+}
+.room:last-child { border-right: none; }
+.room:hover { background: var(--sage-pale); }
+.room.active { background: var(--sage-pale); }
+.room-active-bar {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px; background: var(--sage);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .25s ease;
+}
+.room.active .room-active-bar { transform: scaleX(1); }
+
+.room-header { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.room-icon {
+  width: 30px; height: 30px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+.room-explore .room-icon { background: #e8f0eb; }
+.room-practice .room-icon { background: #e8eef4; }
+.room-hold .room-icon { background: #f4ece8; }
+.room-journal .room-icon { background: #f0eae6; }
+
+.room-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 15px; color: var(--slate);
+}
+
+.room-items { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.room-item {
+  font-size: 12px; color: var(--slate-mid);
+  padding: 6px 10px; border-radius: 5px;
+  background: var(--cream); border: 1px solid transparent;
+  transition: all .15s; cursor: pointer; line-height: 1.35;
+}
+.room-item:hover { background: #fff; border-color: var(--sage-light); color: var(--slate); }
+.room-item.selected { background: #fff; border-color: var(--sage); color: var(--slate); font-weight: 500; }
+.room-item.gated { color: #b0c2cc; background: #f1f5f7; cursor: default; }
+.room-item.gated:hover { background: #f1f5f7; border-color: transparent; color: #b0c2cc; }
+.gated-tag {
+  display: inline-block;
+  font-size: 9px; font-family: 'DM Mono', monospace;
+  letter-spacing: .08em; color: var(--warm);
+  text-transform: uppercase; margin-top: 3px;
+}
+
+/* ── AI TOGGLE BAR ── */
+.ai-toggle-bar {
+  padding: 15px 22px;
+  display: flex; align-items: center; gap: 18px;
+  background: var(--warm-pale);
+  border-top: 1px solid var(--warm-light);
+  flex-wrap: wrap;
+}
+.ai-toggle-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--warm);
+  flex-shrink: 0;
+}
+.toggle-track {
+  display: flex; background: #fff;
+  border: 1px solid var(--warm-light);
+  border-radius: 8px; overflow: hidden; flex-shrink: 0;
+}
+.toggle-opt {
+  padding: 7px 15px; font-size: 12px; color: var(--muted);
+  cursor: pointer; border-right: 1px solid var(--warm-light);
+  transition: all .15s; white-space: nowrap; user-select: none;
+}
+.toggle-opt:last-child { border-right: none; }
+.toggle-opt.active { background: var(--warm); color: #fff; font-weight: 500; }
+.toggle-opt:not(.active):hover { background: var(--warm-pale); color: var(--warm); }
+.toggle-note { font-size: 11px; color: var(--muted); font-style: italic; line-height: 1.45; }
+
+/* AI state overlay hint */
+.ai-state-hint {
+  display: none;
+  font-size: 11px; color: var(--slate-mid);
+  font-style: italic; padding: 8px 22px;
+  background: #f5f9f6;
+  border-top: 1px solid #dde9e2;
+  transition: all .2s;
+}
+.ai-state-hint.visible { display: block; }
+
+/* ── DIVIDER ── */
+.view-divider {
+  display: flex; align-items: center; gap: 14px;
+  margin: 8px 0 22px;
+}
+.div-line { flex: 1; height: 1px; background: #d4dfe4; }
+.div-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--muted);
+}
+
+/* ── THERAPIST SHELL ── */
+.therapist-shell {
+  background: var(--slate);
+  border-radius: 18px; overflow: hidden;
+  box-shadow: 0 4px 40px rgba(30,42,48,.18);
+}
+.therapist-header {
+  background: var(--ink);
+  padding: 13px 22px;
+  display: flex; align-items: center; gap: 10px;
+}
+.t-header-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--slate-light);
+}
+.hil-badge {
+  margin-left: auto;
+  background: var(--sage); color: #fff;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: .12em;
+  text-transform: uppercase;
+  padding: 4px 9px; border-radius: 5px;
+}
+
+.therapist-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+}
+.t-panel {
+  padding: 22px;
+  border-right: 1px solid rgba(255,255,255,.08);
+}
+.t-panel:last-child { border-right: none; }
+.t-panel-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--slate-light);
+  margin-bottom: 16px;
+}
+
+/* Access checkboxes */
+.access-row {
+  display: flex; align-items: center; gap: 9px;
+  margin-bottom: 11px; cursor: pointer;
+}
+.chk {
+  width: 17px; height: 17px; border-radius: 4px;
+  border: 1.5px solid var(--slate-mid); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; transition: all .15s;
+}
+.chk.on { background: var(--sage); border-color: var(--sage); color: #fff; }
+.chk.off { background: transparent; color: transparent; }
+.access-label { font-size: 13px; color: #c8d8e0; }
+.access-label.dim { color: var(--slate-mid); }
+
+/* Trust radios */
+.trust-group { display: flex; flex-direction: column; gap: 11px; }
+.trust-row { display: flex; align-items: center; gap: 9px; cursor: pointer; }
+.radio-ring {
+  width: 15px; height: 15px; border-radius: 50%;
+  border: 1.5px solid var(--slate-mid); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color .15s;
+}
+.radio-ring.on { border-color: var(--sage); }
+.radio-fill { width: 7px; height: 7px; border-radius: 50%; background: var(--sage); }
+.trust-label { font-size: 13px; color: #c8d8e0; }
+.trust-label.bold { font-weight: 500; color: #fff; }
+
+.safety-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(122,158,135,.18);
+  border: 1px solid rgba(122,158,135,.35);
+  color: var(--sage-light);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: .07em;
+  padding: 5px 11px; border-radius: 6px;
+  margin-top: 15px;
+}
+.safety-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--sage); }
+
+/* Flags */
+.flag-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+.fdot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.fdot.crisis { background: var(--flag-red); }
+.fdot.weekly { background: var(--sage); }
+.fdot.attach { background: var(--warm); }
+.flag-text { font-size: 12px; color: #9ab0bc; line-height: 1.4; }
+.flag-val { font-weight: 500; color: #c8d8e0; }
+
+.history-btn {
+  margin-top: 15px; width: 100%;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.14);
+  color: var(--slate-light); border-radius: 7px;
+  padding: 9px 12px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 12px; cursor: pointer;
+  transition: all .15s; text-align: center;
+}
+.history-btn:hover { background: rgba(255,255,255,.07); color: #fff; }
+
+/* ── ROOM DETAIL PANEL ── */
+.room-detail {
+  display: none;
+  background: var(--sage-pale);
+  border-top: 1px solid #d8e8dc;
+  padding: 20px 22px;
+  animation: slideDown .2s ease;
+}
+.room-detail.visible { display: block; }
+@keyframes slideDown { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+.detail-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 14px; color: var(--slate);
+  margin-bottom: 8px; font-style: italic;
+}
+.detail-desc { font-size: 12px; color: var(--slate-mid); line-height: 1.6; }
+
+/* ── FLAG TOAST ── */
+.flag-toast {
+  position: fixed; bottom: 28px; right: 28px;
+  background: var(--ink); color: #fff;
+  padding: 12px 18px; border-radius: 10px;
+  font-size: 13px; font-family: 'Instrument Sans', sans-serif;
+  box-shadow: 0 8px 30px rgba(0,0,0,.25);
+  display: flex; align-items: center; gap: 8px;
+  transform: translateY(80px); opacity: 0;
+  transition: all .3s cubic-bezier(.34,1.56,.64,1);
+  z-index: 100; pointer-events: none;
+}
+.flag-toast.show { transform: translateY(0); opacity: 1; }
+.toast-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--flag-red); }
+
+/* ── MOBILE ── */
+@media (max-width: 700px) {
+  body { padding: 24px 14px 48px; }
+  .page-title { font-size: 22px; }
+  .rooms-grid { grid-template-columns: repeat(2, 1fr); }
+  .room { padding: 16px 14px; }
+  .therapist-grid { grid-template-columns: 1fr; }
+  .t-panel { border-right: none; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .t-panel:last-child { border-bottom: none; }
+  .session-text { font-size: 12px; }
+  .flag-btn { padding: 7px 11px; font-size: 11px; }
+  .ai-toggle-bar { gap: 12px; }
+  .toggle-note { width: 100%; }
+}
+@media (max-width: 420px) {
+  .rooms-grid { grid-template-columns: 1fr; }
+  .room { border-right: none; border-bottom: 1px solid #e8edf0; }
+}
+</style>
+</head>
+<body>
+
+<p class="page-eyebrow">Between-Session Infrastructure</p>
+<h1 class="page-title">Portal Architecture</h1>
+
+<!-- ═══ PATIENT VIEW ═══ -->
+<div class="view-label">Patient View</div>
+<div class="portal-shell">
+
+  <!-- Session bar -->
+  <div class="session-bar">
+    <div class="session-left">
+      <div class="session-dot"></div>
+      <span class="session-text">Next session with <span class="session-name">Jamie</span> &nbsp;·&nbsp; Thu 3:00 pm</span>
+    </div>
+    <button class="flag-btn" id="flagBtn" onclick="toggleFlag()">
+      <span id="flagIcon">⚑</span>
+      <span id="flagLabel">Flag for Session</span>
+    </button>
+  </div>
+
+  <!-- Four rooms -->
+  <div class="rooms-grid">
+
+    <div class="room room-explore" id="room-explore" onclick="selectRoom('explore')">
+      <div class="room-active-bar"></div>
+      <div class="room-header">
+        <div class="room-icon">🔍</div>
+        <span class="room-name">Explore</span>
+      </div>
+      <ul class="room-items">
+        <li class="room-item" onclick="selectItem(event,'Diagnosis Explorer','explore')">Diagnosis Explorer</li>
+        <li class="room-item" onclick="selectItem(event,'Questions Only','explore')">Questions Only</li>
+      </ul>
+    </div>
+
+    <div class="room room-practice" id="room-practice" onclick="selectRoom('practice')">
+      <div class="room-active-bar"></div>
+      <div class="room-header">
+        <div class="room-icon">🎯</div>
+        <span class="room-name">Practice</span>
+      </div>
+      <ul class="room-items">
+        <li class="room-item" onclick="selectItem(event,'Distress Tolerance','practice')">Distress Tolerance</li>
+        <li class="room-item" onclick="selectItem(event,'Hard Conversations','practice')">Hard Conversations</li>
+        <li class="room-item" onclick="selectItem(event,'ShadowBox','practice')">ShadowBox</li>
+        <li class="room-item" onclick="selectItem(event,'Risk Disclosure','practice')">Risk Disclosure</li>
+        <li class="room-item gated">Modality Rooms<br><span class="gated-tag">therapist-enabled</span></li>
+      </ul>
+    </div>
+
+    <div class="room room-hold" id="room-hold" onclick="selectRoom('hold')">
+      <div class="room-active-bar"></div>
+      <div class="room-header">
+        <div class="room-icon">🌿</div>
+        <span class="room-name">Hold</span>
+      </div>
+      <ul class="room-items">
+        <li class="room-item" onclick="selectItem(event,'Spacious Conversation','hold')">Spacious Conversation</li>
+      </ul>
+    </div>
+
+    <div class="room room-journal" id="room-journal" onclick="selectRoom('journal')">
+      <div class="room-active-bar"></div>
+      <div class="room-header">
+        <div class="room-icon">📓</div>
+        <span class="room-name">Journal</span>
+      </div>
+      <ul class="room-items">
+        <li class="room-item" onclick="selectItem(event,'Free Write','journal')">Free Write</li>
+        <li class="room-item" onclick="selectItem(event,'Mood Tracker','journal')">Mood Tracker</li>
+        <li class="room-item" onclick="selectItem(event,'Med Management','journal')">Med Management</li>
+        <li class="room-item" onclick="selectItem(event,'Flag &amp; Bridge','journal')">Flag &amp; Bridge</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Room detail expansion -->
+  <div class="room-detail" id="roomDetail">
+    <div class="detail-title" id="detailTitle"></div>
+    <div class="detail-desc" id="detailDesc"></div>
+  </div>
+
+  <!-- AI Presence Toggle -->
+  <div class="ai-toggle-bar">
+    <span class="ai-toggle-label">AI Presence</span>
+    <div class="toggle-track">
+      <div class="toggle-opt active" onclick="setAI('full',this)">Full</div>
+      <div class="toggle-opt" onclick="setAI('minimal',this)">Minimal</div>
+      <div class="toggle-opt" onclick="setAI('off',this)">Off</div>
+    </div>
+    <span class="toggle-note">Portal is valuable even with AI off — it is a structured environment.</span>
+  </div>
+
+  <div class="ai-state-hint" id="aiHint"></div>
+
+</div>
+
+<!-- ═══ DIVIDER ═══ -->
+<div class="view-divider">
+  <div class="div-line"></div>
+  <span class="div-label">Therapist View</span>
+  <div class="div-line"></div>
+</div>
+
+<!-- ═══ THERAPIST VIEW ═══ -->
+<div class="view-label">Clinician Dashboard</div>
+<div class="therapist-shell">
+  <div class="therapist-header">
+    <span class="t-header-title">Clinical Controls</span>
+    <span class="hil-badge">Human in Loop</span>
+  </div>
+  <div class="therapist-grid">
+
+    <!-- Room Access -->
+    <div class="t-panel">
+      <div class="t-panel-title">Room Access</div>
+      <div class="access-row" onclick="toggleAccess(this)">
+        <div class="chk on">✓</div>
+        <span class="access-label">Explore</span>
+      </div>
+      <div class="access-row" onclick="toggleAccess(this)">
+        <div class="chk on">✓</div>
+        <span class="access-label">Hold / Journal</span>
+      </div>
+      <div class="access-row" onclick="toggleAccess(this)">
+        <div class="chk on">✓</div>
+        <span class="access-label">ShadowBox</span>
+      </div>
+      <div class="access-row" onclick="toggleAccess(this)">
+        <div class="chk off">✓</div>
+        <span class="access-label dim">CBT Room</span>
+      </div>
+    </div>
+
+    <!-- Clinical Trust -->
+    <div class="t-panel">
+      <div class="t-panel-title">Clinical Trust Level</div>
+      <div class="trust-group" id="trustGroup">
+        <div class="trust-row" onclick="setTrust(this)">
+          <div class="radio-ring off"></div>
+          <span class="trust-label">Standard</span>
+        </div>
+        <div class="trust-row" onclick="setTrust(this)">
+          <div class="radio-ring on"><div class="radio-fill"></div></div>
+          <span class="trust-label bold">Established</span>
+        </div>
+        <div class="trust-row" onclick="setTrust(this)">
+          <div class="radio-ring off"></div>
+          <span class="trust-label">Specialized</span>
+        </div>
+      </div>
+      <div class="safety-pill">
+        <div class="safety-dot"></div>
+        Safety Plan Active
+      </div>
+    </div>
+
+    <!-- Flags & Summaries -->
+    <div class="t-panel">
+      <div class="t-panel-title">Flags &amp; Summaries</div>
+      <div class="flag-row">
+        <div class="fdot crisis"></div>
+        <span class="flag-text">Crisis flags &nbsp;<span class="flag-val">Real-time</span></span>
+      </div>
+      <div class="flag-row">
+        <div class="fdot weekly"></div>
+        <span class="flag-text">Summaries &nbsp;<span class="flag-val">Weekly</span></span>
+      </div>
+      <div class="flag-row">
+        <div class="fdot attach"></div>
+        <span class="flag-text">Attachment signals &nbsp;<span class="flag-val">On</span></span>
+      </div>
+      <button class="history-btn" id="histBtn" onclick="viewHistory()">View Session History →</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="flag-toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+// ─── Room detail content ───
+const roomInfo = {
+  explore: {
+    'Diagnosis Explorer': 'Browse your diagnosis in plain language. Ask questions. Build understanding without pressure to respond therapeutically.',
+    'Questions Only': 'A space where the AI only asks — never answers. Designed to support your own reflection without leading.',
+    'L / R Brain': 'Toggle between analytical framing and somatic/metaphorical language. Meet yourself where you are today.'
+  },
+  practice: {
+    'Distress Tolerance': 'Structured distress tolerance exercises calibrated to your current window of tolerance.',
+    'Hard Conversations': 'Rehearse difficult conversations in a low-stakes environment before they happen in real life.',
+    'ShadowBox': 'A contained space to externalize difficult internal material — projection, not processing.',
+    'Tend &amp; Send': 'Draft and send supportive messages to people in your life. AI holds the relational scaffolding.',
+  },
+  hold: {
+    'Spacious Conversation': 'Unstructured, open-ended presence. The AI listens and reflects without directing.',
+    'Create Space': 'A guided pause — breathing, orienting, grounding. Structure without performance.',
+    'F &amp; N Resonance': 'Felt-sense and narrative resonance exercises drawn from somatic and resonance-language traditions.',
+    'Absorption': 'Immersive, low-demand engagement. For moments when you need to exist without being asked anything.'
+  },
+  journal: {
+    'Free Write': 'Unstructured, unprompted writing. No format, no goal. Just the page.',
+    'Mood Tracker': 'Log your emotional state across the week. Patterns surface over time and are visible to your clinician.',
+    'Med Management': 'Track medication timing, dosage notes, and side effects. Shared directly with your prescriber.',
+    'Flag &amp; Bridge': 'The patient holds the bridge key. Mark what matters from your week and choose what crosses into the session. Nothing is extracted — only what you decide to share.'
+  }
+};
+
+let activeRoom = null;
+let selectedItem = null;
+
+function selectRoom(roomId) {
+  // deselect if already active
+  if (activeRoom === roomId) {
+    document.getElementById('room-' + roomId).classList.remove('active');
+    document.getElementById('roomDetail').classList.remove('visible');
+    activeRoom = null;
+    return;
+  }
+  // clear previous
+  document.querySelectorAll('.room').forEach(r => r.classList.remove('active'));
+  document.querySelectorAll('.room-item').forEach(i => i.classList.remove('selected'));
+  activeRoom = roomId;
+  document.getElementById('room-' + roomId).classList.add('active');
+  // show first item detail
+  const items = Object.keys(roomInfo[roomId]);
+  showDetail(items[0], roomId);
+}
+
+function selectItem(e, label, roomId) {
+  e.stopPropagation();
+  if (label.includes('gated')) return;
+  document.querySelectorAll('.room-item').forEach(i => i.classList.remove('selected'));
+  e.target.classList.add('selected');
+  showDetail(label, roomId);
+}
+
+function showDetail(label, roomId) {
+  const desc = roomInfo[roomId][label];
+  if (!desc) return;
+  document.getElementById('detailTitle').textContent = label.replace('&amp;','&');
+  document.getElementById('detailDesc').textContent = desc;
+  document.getElementById('roomDetail').classList.add('visible');
+}
+
+// ─── AI Toggle ───
+const aiMessages = {
+  full: null,
+  minimal: 'AI Minimal: The AI is present but won\'t initiate. It responds only when you engage directly.',
+  off: 'AI Off: The portal remains fully available. Rooms, journal, flagging — all active without AI presence.'
+};
+
+function setAI(state, el) {
+  document.querySelectorAll('.toggle-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  const hint = document.getElementById('aiHint');
+  if (aiMessages[state]) {
+    hint.textContent = aiMessages[state];
+    hint.classList.add('visible');
+  } else {
+    hint.classList.remove('visible');
+  }
+}
+
+// ─── Flag button ───
+let flagged = false;
+let toastTimer;
+function toggleFlag() {
+  flagged = !flagged;
+  const btn = document.getElementById('flagBtn');
+  document.getElementById('flagIcon').textContent = flagged ? '✓' : '⚑';
+  document.getElementById('flagLabel').textContent = flagged ? 'Flagged' : 'Flag for Session';
+  btn.classList.toggle('flagged', flagged);
+  showToast(flagged
+    ? 'Flagged for Jamie — will appear in your next session.'
+    : 'Flag removed.');
+}
+
+function showToast(msg) {
+  clearTimeout(toastTimer);
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ─── Therapist: access checkboxes ───
+function toggleAccess(row) {
+  const chk = row.querySelector('.chk');
+  const label = row.querySelector('.access-label');
+  const isOn = chk.classList.contains('on');
+  chk.classList.toggle('on', !isOn);
+  chk.classList.toggle('off', isOn);
+  label.classList.toggle('dim', isOn);
+  showToast(isOn
+    ? label.textContent.trim() + ' access removed.'
+    : label.textContent.trim() + ' access granted.');
+}
+
+// ─── Therapist: trust radios ───
+function setTrust(row) {
+  document.querySelectorAll('#trustGroup .trust-row').forEach(r => {
+    const ring = r.querySelector('.radio-ring');
+    const lbl = r.querySelector('.trust-label');
+    ring.classList.remove('on','off');
+    ring.classList.add('off');
+    ring.innerHTML = '';
+    lbl.classList.remove('bold');
+    lbl.style.color = '';
+  });
+  const ring = row.querySelector('.radio-ring');
+  ring.classList.remove('off');
+  ring.classList.add('on');
+  ring.innerHTML = '<div class="radio-fill"></div>';
+  const lbl = row.querySelector('.trust-label');
+  lbl.classList.add('bold');
+  lbl.style.color = '#fff';
+  showToast('Trust level set to: ' + lbl.textContent.trim());
+}
+
+// ─── History button ───
+function viewHistory() {
+  showToast('Session history panel would open here.');
+}
+</script>
+</body>
+</html>
