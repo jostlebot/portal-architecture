@@ -25,6 +25,39 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Password protection */
+.pw-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--cream);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 20px;
+}
+.pw-overlay.hidden { display: none; }
+.pw-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 24px; color: var(--slate);
+  font-style: italic;
+}
+.pw-input {
+  padding: 12px 18px; font-size: 16px;
+  border: 1px solid var(--sage-light);
+  border-radius: 8px; width: 220px;
+  font-family: 'Instrument Sans', sans-serif;
+  text-align: center;
+}
+.pw-input:focus { outline: none; border-color: var(--sage); }
+.pw-btn {
+  padding: 10px 28px; background: var(--sage);
+  color: white; border: none; border-radius: 8px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 14px; cursor: pointer;
+}
+.pw-btn:hover { background: #6a8e77; }
+.pw-error { color: var(--flag-red); font-size: 13px; height: 18px; }
+.main-content { display: none; }
+.main-content.visible { display: block; }
+
 body {
   background: var(--cream);
   font-family: 'Instrument Sans', sans-serif;
@@ -380,6 +413,14 @@ body {
 </head>
 <body>
 
+<div class="pw-overlay" id="pwOverlay">
+  <div class="pw-title">Enter Password</div>
+  <input type="password" class="pw-input" id="pwInput" placeholder="Password" autofocus>
+  <button class="pw-btn" onclick="checkPw()">Enter</button>
+  <div class="pw-error" id="pwError"></div>
+</div>
+
+<div class="main-content" id="mainContent">
 <p class="page-eyebrow">Between-Session Infrastructure</p>
 <h1 class="page-title">Portal Architecture</h1>
 
@@ -563,6 +604,30 @@ body {
   <div class="toast-dot"></div>
   <span id="toastMsg"></span>
 </div>
+</div><!-- end main-content -->
+
+<script>
+// ─── Password protection ───
+function checkPw() {
+  const input = document.getElementById('pwInput');
+  if (input.value === 'portal') {
+    document.getElementById('pwOverlay').classList.add('hidden');
+    document.getElementById('mainContent').classList.add('visible');
+    sessionStorage.setItem('auth', '1');
+  } else {
+    document.getElementById('pwError').textContent = 'Incorrect password';
+    input.value = '';
+    input.focus();
+  }
+}
+document.getElementById('pwInput').addEventListener('keypress', e => {
+  if (e.key === 'Enter') checkPw();
+});
+if (sessionStorage.getItem('auth') === '1') {
+  document.getElementById('pwOverlay').classList.add('hidden');
+  document.getElementById('mainContent').classList.add('visible');
+}
+</script>
 
 <script>
 // ─── Room detail content ───
